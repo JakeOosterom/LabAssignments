@@ -20,6 +20,9 @@ public class PlayerHealthUI : MonoBehaviour
         healthSlider = ui.GetChild(0).GetComponent<Image>();
 
         GetComponent<CharacterStats>().OnHealthChange += OnHealthChange;
+
+        //GetComponent<CharacterStats>().CurrentHealth = 120;
+        Debug.Log(GetComponent<CharacterStats>().CurrentHealth);
     }
 
     void OnHealthChange(int maxHealth, int currentHealth)
