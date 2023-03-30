@@ -19,13 +19,13 @@ public class PlayerHealthUI : MonoBehaviour
         ui.SetParent(target);
         healthSlider = ui.GetChild(0).GetComponent<Image>();
 
-        GetComponent<CharacterStats>().OnHealthChange += OnHealthChange;
+        GetComponent<CharacterStats>().OnHealthChanged += OnHealthChanged;
 
-        //GetComponent<CharacterStats>().CurrentHealth = 120;
+        // GetComponent<CharacterStats>().CurrentHealth = 120;
         Debug.Log(GetComponent<CharacterStats>().CurrentHealth);
     }
 
-    void OnHealthChange(int maxHealth, int currentHealth)
+    void OnHealthChanged(int maxHealth, int currentHealth)
     {
         if (ui != null)
         {
@@ -34,7 +34,7 @@ public class PlayerHealthUI : MonoBehaviour
 
             if (currentHealth <= 0)
             {
-                Destroy(gameObject);
+                Destroy(ui.gameObject);
             }
         }
     }

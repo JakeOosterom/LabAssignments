@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviour, IDataPersistance
 {
-    PlayerAction InputAction;
+    PlayerAction inputAction;
     Vector2 move;
     Vector2 rotate;
     Rigidbody rb;
@@ -23,26 +23,29 @@ public class PlayerController : MonoBehaviour
     public GameObject projectile;
     public Transform projectilePos;
 
-    //testing health
+    // Health testing
     CharacterStats cs;
 
     private void Awake()
     {
-        InputAction = new PlayerAction();
+        inputAction = new PlayerAction();
 
-        InputAction.Player.Move.performed += cntxt => move = cntxt.ReadValue<Vector2>();
-        InputAction.Player.Move.canceled += cntxt => move = Vector2.zero;
+        inputAction.Player.Move.performed += cntxt => move = cntxt.ReadValue<Vector2>();
+        inputAction.Player.Move.canceled += cntxt => move = Vector2.zero;
 
-        InputAction.Player.Jump.performed += cntext => Jump();
+        inputAction.Player.Jump.performed += cntxt => Jump();
 
-        InputAction.Player.Look.performed += cntxt => rotate = cntxt.ReadValue<Vector2>();
-        InputAction.Player.Look.canceled += cntxt => rotate = Vector2.zero;
+        inputAction.Player.Look.performed += cntxt => rotate = cntxt.ReadValue<Vector2>();
+        inputAction.Player.Look.canceled += cntxt => rotate = Vector2.zero;
 
-        InputAction.Player.Shooting.performed += cntext => Shoot();
+        inputAction.Player.Shoot.performed += cntxt => Shoot();
 
-        //test health
+        // Health testing
         cs = GetComponent<CharacterStats>();
-        InputAction.Player.TakeDamage.performed += cntext => cs.TakeDamage(2);
+        inputAction.Player.TakeDamage.performed += cntxt => cs.TakeDamage(2);
+
+        // Restoring Health
+        inputAction.Player.RestoreHealth.performed += cntxt => RestoreHealth();
 
         rb = GetComponent<Rigidbody>();
         playerAnimator = GetComponent<Animator>();
@@ -53,17 +56,25 @@ public class PlayerController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
     }
 
-    private void OnEnable()
+    void RestoreHealth()
     {
-        InputAction.Player.Enable();
+        if (Inventory.inventory.consumableItemsController.GetItem("Heart").GetOwnedQuantity() != 0)
+        {
+            Inventory.inventory.consumableItemsController.UseItem("Heart");
+        }
     }
 
-    //private void Start() {
-    //}
+    private void OnEnable()
+    {
+        inputAction.Player.Enable();
+    }
 
-    //private void FixedUpdate() {
-    //}
-
+    // 20 frames per second
+    // 1/20 = 0.05
+    // 20 * 1 * 10 * 0.05 = 10
+    // 500 frames per second
+    // 1/500 = 0.002
+    // 500 * 1* 10 * 0.002 = 10
     private void Update()
     {
         cameraRotation = new Vector3(cameraRotation.x + rotate.y, cameraRotation.y + rotate.x, cameraRotation.z);
@@ -77,13 +88,13 @@ public class PlayerController : MonoBehaviour
 
     private void LateUpdate()
     {
-        //playerCamera.transform.eulerAngles = new Vector3(cameraRotation.x, cameraRotation.y, cameraRotation.z);
+        // playerCamera.transform.eulerAngles = new Vector3(cameraRotation.x, cameraRotation.y, cameraRotation.z);
         playerCamera.transform.rotation = Quaternion.Euler(cameraRotation);
     }
 
     private void OnDisable()
     {
-        InputAction.Player.Disable();
+        inputAction.Player.Disable();
     }
 
     private void Jump()
@@ -91,19 +102,29 @@ public class PlayerController : MonoBehaviour
         if (isGrounded)
         {
             rb.velocity = new Vector3(rb.velocity.x, jump, rb.velocity.z);
-            Debug.Log("Jump Boi");
         }
     }
 
     private void Shoot()
     {
-        Rigidbody rbBullet = Instantiate(projectile, projectilePos.transform.position, projectilePos.transform.rotation).GetComponent<Rigidbody>();
-        rbBullet.AddForce(transform.forward * 32f, ForceMode.Impulse);
+        Rigidbody rbBullet = Instantiate(projectile, projectilePos.position, Quaternion.identity).GetComponent<Rigidbody>();
+        rbBullet.AddForce(Vector3.forward * 32f, ForceMode.Impulse);
     }
 
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
         Gizmos.DrawRay(transform.position, -Vector3.up * distanceToGround);
+    }
+
+    // Game data
+    public void SaveData(ref GameData data)
+    {
+        data.playerPosition = transform.position;
+    }
+
+    public void LoadData(GameData data)
+    {
+        transform.position = data.playerPosition;
     }
 }

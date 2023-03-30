@@ -5,10 +5,9 @@ using UnityEngine;
 public class PlayerManager : MonoBehaviour
 {
     public static PlayerManager playermanager;
-
     public GameObject player;
 
-    void Awake()
+    private void Awake()
     {
         if (playermanager == null)
         {

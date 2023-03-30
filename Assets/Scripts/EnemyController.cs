@@ -9,24 +9,24 @@ public class EnemyController : MonoBehaviour
     public Transform player;
     public LayerMask groundlayer, playerlayer;
 
-    //Partol
+    // Patrol
     public Vector3 walkPoint;
-    bool walkPointSet;
+    bool walkpointSet;
     public float walkPointRange;
 
-    //Attack
+    // Attack
     public float timeBetweenAttacks;
     bool alreadyAttacked;
     public GameObject projectile;
     public GameObject projectilePos;
 
-    //States
+    // States
     public float sightRange, attackRange;
     public bool playerInSightRange, playerInAttackRange;
 
     private void Awake()
     {
-        //agent = GetComponent<NavMeshAgent>();
+        // agent = GetComponent<NavMeshAgent>();
     }
 
     private void Update()
@@ -34,47 +34,39 @@ public class EnemyController : MonoBehaviour
         playerInSightRange = Physics.CheckSphere(transform.position, sightRange, playerlayer);
         playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, playerlayer);
 
-        //Partol
+        // Patrol State
         if (!playerInSightRange && !playerInAttackRange) Patrol();
-        //Chase
+        // Chase State
         if (playerInSightRange && !playerInAttackRange) Chase();
-        //Attack
+        // Attack State
         if (playerInSightRange && playerInAttackRange) Attack();
-
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, sightRange);
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
     }
 
     private void Patrol()
     {
-        if (!walkPointSet) SearchWalkPoint();
+        if (!walkpointSet) SearchWalkPoint();
 
-        if (walkPointSet)
+        // Debug.Log(walkpointSet);
+        if (walkpointSet)
             agent.SetDestination(walkPoint);
+
         Vector3 distanceWalkPoint = transform.position - walkPoint;
 
-        //WalkPoint reached
+        // Walkpoint reached
         if (distanceWalkPoint.magnitude < 1f)
-            walkPointSet = false;
+            walkpointSet = false;
     }
 
     private void SearchWalkPoint()
     {
-        //calculate new point
+        // Calculate new point
         float randomX = Random.Range(-walkPointRange, walkPointRange);
         float randomZ = Random.Range(-walkPointRange, walkPointRange);
 
         walkPoint = new Vector3(transform.position.x + randomX, transform.position.y, transform.position.z + randomZ);
 
-        if (Physics.Raycast(walkPoint, -transform.up, 2f, groundlayer))
-            walkPointSet = true;
+        if (Physics.Raycast(walkPoint, -transform.up, 1f, groundlayer))
+            walkpointSet = true;
     }
 
     private void Chase()
@@ -97,8 +89,20 @@ public class EnemyController : MonoBehaviour
             Invoke(nameof(ResetAttack), timeBetweenAttacks);
         }
     }
+
     private void ResetAttack()
     {
         alreadyAttacked = false;
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, sightRange);
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, attackRange);
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawLine(walkPoint, -transform.up);
     }
 }
